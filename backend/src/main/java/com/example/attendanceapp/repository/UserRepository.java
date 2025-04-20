@@ -1,6 +1,7 @@
 package com.example.attendanceapp.repository;
 
 import com.example.attendanceapp.model.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -29,5 +30,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * - 従業員番号による検索
      * - ユーザー情報の重複チェック
      */
+    @EntityGraph(attributePaths = "role")
     Optional<User> findByEmployeeNumber(String employeeNumber);
 }

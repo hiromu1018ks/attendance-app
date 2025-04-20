@@ -9,82 +9,90 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
+/**
+ * JWTトークンの生成、検証、データ抽出を行うユーティリティクラス
+ * Spring Securityと連携して認証機能を提供します
+ */
 @Component
 public class JwtUtil {
     /**
      * JWTトークンの有効期限（ミリ秒）
      * 1000ミリ秒 × 60秒 × 60分 × 24時間 = 1日
+     * トークンの有効期限が切れると、ユーザーは再度ログインが必要になります
      */
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
 
     /**
      * トークンの署名に使用する秘密鍵
-     * TODO 注意: 本番環境では、より長い鍵を使用し、環境変数や設定ファイルで管理すること
+     * この鍵を使用してトークンの改ざんを防止します
+     * TODO 重要: 本番環境では、環境変数や設定ファイルで管理する必要があります
      */
     private static final String SECRET_KEY = "my-super-secret-jwt-key-that-is-very-secure";
 
     /**
-     * 秘密鍵をHMAC-SHA256アルゴリズムで暗号化したKey オブジェクト
-     * このKeyオブジェクトを使用してトークンの署名と検証を行う
+     * 秘密鍵をHMAC-SHA256アルゴリズムで暗号化したKeyオブジェクト
+     * JWTの署名生成と検証に使用されます
+     * アプリケーション起動時に1回だけ生成され、以降は再利用されます
      */
     private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
     /**
-     * 指定された職員番号をもとにJWTトークンを生成する
+     * 職員番号からJWTトークンを生成します
+     * トークンには以下の情報が含まれます：
+     * - サブジェクト：職員番号
+     * - 発行時刻：現在時刻
+     * - 有効期限：現在時刻から24時間後
+     * - 署名：HMAC-SHA256アルゴリズムによる署名
      *
      * @param employeeNumber 職員番号
-     * @return 生成されたJWTトークン
+     * @return 生成されたJWTトークン（文字列形式）
      */
     public String generateToken(String employeeNumber) {
         return Jwts.builder()
-                // トークンのサブジェクトとして職員番号を設定
                 .setSubject(employeeNumber)
-                // トークンの発行時刻を現在時刻で設定
                 .setIssuedAt(new Date())
-                // トークンの有効期限を現在時刻+EXPIRATION_TIMEで設定
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                // HMAC-SHA256アルゴリズムと秘密鍵で署名
                 .signWith(key, SignatureAlgorithm.HS256)
-                // トークンを文字列形式に変換
                 .compact();
     }
 
     /**
-     * JWTトークンから職員番号を抽出する
+     * JWTトークンから職員番号を抽出します
+     * トークンの署名を検証し、有効な場合のみ職員番号を返します
+     * 署名が無効な場合はJwtExceptionがスローされます
      *
-     * @param token JWTトークン
-     * @return トークンに含まれる職員番号
+     * @param token 検証するJWTトークン
+     * @return トークンから抽出した職員番号
+     * @throws JwtException トークンが無効な場合
      */
     public String extractEmployeeNumber(String token) {
         return Jwts.parserBuilder()
-                // 署名の検証に使用する秘密鍵を設定
                 .setSigningKey(key)
                 .build()
-                // トークンを解析してクレーム（トークンに含まれる情報）を取得
-                .parseClaimsJwt(token)
+                .parseClaimsJws(token)
                 .getBody()
-                // クレームからサブジェクト（職員番号）を取得
                 .getSubject();
     }
 
     /**
-     * JWTトークンの有効性を検証する
-     * トークンの署名が正しく、有効期限が切れていない場合にtrueを返す
+     * JWTトークンの有効性を検証します
+     * 以下の条件をすべて満たす場合にtrueを返します：
+     * - トークンの署名が正しい
+     * - トークンの有効期限が切れていない
+     * - トークンの形式が正しい
      *
      * @param token 検証するJWTトークン
      * @return トークンが有効な場合はtrue、無効な場合はfalse
      */
     public boolean validateToken(String token) {
         try {
-            // トークンの解析を試みる
-            // 署名が不正な場合や有効期限切れの場合は例外が発生する
             Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
-                    .parseClaimsJwt(token);
+                    .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
-            // トークンの検証に失敗した場合
+            // トークンの検証に失敗した場合（署名が不正、有効期限切れなど）
             return false;
         }
     }
