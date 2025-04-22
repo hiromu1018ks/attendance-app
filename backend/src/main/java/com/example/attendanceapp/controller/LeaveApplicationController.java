@@ -1,14 +1,14 @@
 package com.example.attendanceapp.controller;
 
 import com.example.attendanceapp.dto.LeaveApplicationRequest;
+import com.example.attendanceapp.dto.LeaveApplicationResponse;
 import com.example.attendanceapp.service.LeaveApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController // このクラスがREST APIのエンドポイントとして定義されていることを示す
 @RequestMapping("/api/leaves") // このコントローラが "/api/leaves" というベースURLでアクセスされるエンドポイントを持つことを定義
@@ -33,5 +33,14 @@ public class LeaveApplicationController {
         String employeeNumber = authentication.getName();
         // 休暇申請サービスのapplyLeaveメソッドを呼び出して、休暇申請処理を委譲。
         leaveApplicationService.applyLeave(request, employeeNumber);
+    }
+
+    @GetMapping
+    // このエンドポイントはHTTP GETリクエストを処理し、現在認証済みのユーザー自身の休暇申請一覧を取得するために使用されます。
+    public List<LeaveApplicationResponse> getOwnApplications(Authentication authentication) {
+        // 認証情報からユーザー名を取得します。ここではユーザー名が従業員番号として扱われます。
+        String employeeNumber = authentication.getName();
+        // 取得した従業員番号を用いて、休暇申請サービスから該当ユーザーの休暇申請情報を取得し、返却します。
+        return leaveApplicationService.getOwnApplications(employeeNumber);
     }
 }

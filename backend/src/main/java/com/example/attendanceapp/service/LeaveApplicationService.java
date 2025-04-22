@@ -1,15 +1,18 @@
 package com.example.attendanceapp.service;
 
 import com.example.attendanceapp.dto.LeaveApplicationRequest;
+import com.example.attendanceapp.dto.LeaveApplicationResponse;
 import com.example.attendanceapp.model.LeaveApplication;
 import com.example.attendanceapp.model.User;
 import com.example.attendanceapp.repository.LeaveApplicationRepository;
 import com.example.attendanceapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * このサービスクラスは、休暇申請に関するビジネスロジックを実装しています。
@@ -107,5 +110,32 @@ public class LeaveApplicationService {
 
         // 最後にエンティティを永続化し、データベースに保存する
         leaveApplicationRepository.save(entity);
+    }
+
+    // ユーザー自身の休暇申請を取得するためのメソッド
+    // 各ユーザーに紐づいた申請データを新しい順に取得し、レスポンスDTOに変換して返します
+    public List<LeaveApplicationResponse> getOwnApplications(String employeeNumber) {
+        // 社員番号に基づいてユーザー情報を取得します
+        // ユーザーが見つからない場合は RuntimeException をスローします
+        User user = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+
+        // ユーザーに関連する休暇申請データを新しい順に取得します
+        // 取得した各エンティティを toResponse メソッドで DTO に変換し、結果のリストを返します
+        return leaveApplicationRepository.findByUserOrderByCreatedAtDesc(user)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // 休暇申請エンティティをレスポンス用のDTOに変換するためのヘルパーメソッド
+// エンティティからDTOへのプロパティコピーを行い、DTOを返します
+    private LeaveApplicationResponse toResponse(LeaveApplication entity) {
+        // 新しいレスポンスDTOのインスタンスを作成します
+        LeaveApplicationResponse dto = new LeaveApplicationResponse();
+        // BeanUtils を用いて、エンティティのプロパティを DTO にコピーします
+        BeanUtils.copyProperties(entity, dto);
+        // コピー後のDTOを返却します
+        return dto;
     }
 }

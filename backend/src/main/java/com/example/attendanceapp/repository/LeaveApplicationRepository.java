@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 /**
  * LeaveApplicationRepositoryインターフェースは、休暇申請エンティティ（LeaveApplication）のデータベース操作を定義します。
  * このインターフェースはSpring Data JPAが提供するJpaRepositoryを継承しており、基本的なCRUD処理を利用可能です。
@@ -37,4 +39,16 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
             AND YEAR(l.startDate) = :year
             """)
     Integer sumUsedMinutesByUserAndYear(@Param("user") User user, @Param("year") int year);
+
+    /**
+     * 指定されたユーザーが提出した休暇申請を作成日時の降順で取得します。
+     * このメソッドは、パラメータとして渡されたユーザーに紐づく休暇申請のすべてのレコードを、
+     * 新しい順（最新の申請が最初）に並び替えて返します。
+     *
+     * @param user 休暇申請情報を取得したい対象ユーザー。
+     *             このパラメータにより、該当ユーザーの申請記録がフィルタリングされます。
+     * @return List&lt;LeaveApplication&gt; ユーザーが作成した休暇申請のリスト。
+     * このリストは、作成日時(createdAt)に基づいて降順（最新順）に整列されています。
+     */
+    List<LeaveApplication> findByUserOrderByCreatedAtDesc(User user);
 }
