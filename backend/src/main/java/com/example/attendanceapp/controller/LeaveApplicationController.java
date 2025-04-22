@@ -2,6 +2,7 @@ package com.example.attendanceapp.controller;
 
 import com.example.attendanceapp.dto.LeaveApplicationRequest;
 import com.example.attendanceapp.dto.LeaveApplicationResponse;
+import com.example.attendanceapp.dto.LeaveBalanceResponse;
 import com.example.attendanceapp.service.LeaveApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,5 +43,15 @@ public class LeaveApplicationController {
         String employeeNumber = authentication.getName();
         // 取得した従業員番号を用いて、休暇申請サービスから該当ユーザーの休暇申請情報を取得し、返却します。
         return leaveApplicationService.getOwnApplications(employeeNumber);
+    }
+
+    @GetMapping("/balance")
+    // このエンドポイントは、HTTP GETリクエストにより休暇残高の情報を取得するために使用されます。
+    public LeaveBalanceResponse getBalance(Authentication authentication) {
+        // 認証情報から、現在ログインしているユーザーの識別子（従業員番号）を取得します。
+        String employeeNumber = authentication.getName();
+        // 取得した従業員番号を使用して、休暇申請サービスからそのユーザーの休暇残高情報を取得し、
+        // 結果としてLeaveBalanceResponseオブジェクトを返却します。
+        return leaveApplicationService.getLeaveBalance(employeeNumber);
     }
 }

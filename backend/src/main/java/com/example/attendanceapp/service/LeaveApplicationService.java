@@ -2,6 +2,7 @@ package com.example.attendanceapp.service;
 
 import com.example.attendanceapp.dto.LeaveApplicationRequest;
 import com.example.attendanceapp.dto.LeaveApplicationResponse;
+import com.example.attendanceapp.dto.LeaveBalanceResponse;
 import com.example.attendanceapp.model.LeaveApplication;
 import com.example.attendanceapp.model.User;
 import com.example.attendanceapp.repository.LeaveApplicationRepository;
@@ -11,8 +12,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * このサービスクラスは、休暇申請に関するビジネスロジックを実装しています。
@@ -137,5 +140,25 @@ public class LeaveApplicationService {
         BeanUtils.copyProperties(entity, dto);
         // コピー後のDTOを返却します
         return dto;
+    }
+
+    public LeaveBalanceResponse getLeaveBalance(String employeeNumber) {
+        // 指定された従業員番号に基づいてユーザー情報を検索する。
+        // ユーザーが存在しない場合は例外をスローする。
+        User user = userRepository.findByEmployeeNumber(employeeNumber)
+                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+
+        // 現在の西暦年において、ユーザーが既に使用した休暇の合計時間（分単位）を取得する。
+        // 結果がnullの場合は0とする。
+        int used = Optional.ofNullable(
+                leaveApplicationRepository.sumUsedMinutesByUserAndYear(user, LocalDate.now().getYear())
+        ).orElse(0);
+
+        // TODO: 将来的にはアプリ側で休暇上限の設定を取得できるようにする。
+        // 現在はハードコーディングされた休暇上限（分単位）を設定している。
+        int limit = 1860;
+
+        // LeaveBalanceResponseオブジェクトを作成し、使用済み分、残り分、全上限を設定して返す。
+        return new LeaveBalanceResponse(used, limit - used, limit);
     }
 }
