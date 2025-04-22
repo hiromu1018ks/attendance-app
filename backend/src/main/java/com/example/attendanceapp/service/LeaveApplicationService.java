@@ -161,4 +161,56 @@ public class LeaveApplicationService {
         // LeaveBalanceResponseオブジェクトを作成し、使用済み分、残り分、全上限を設定して返す。
         return new LeaveBalanceResponse(used, limit - used, limit);
     }
+
+    // 従業員の休暇申請を承認するメソッド
+    public void approveLeave(Long id, String approverEmployeeNumber, String comment) {
+        // 休暇申請IDから休暇申請オブジェクトを取得する。存在しない場合は例外をスローする。
+        LeaveApplication application = leaveApplicationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("申請が見つかりません"));
+       
+        // 承認者の社員番号からユーザーオブジェクトを取得する。存在しない場合は例外をスローする。
+        User approver = userRepository.findByEmployeeNumber(approverEmployeeNumber)
+                .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
+
+        // 休暇申請の状態を"APPROVED"（承認済み）に更新する
+        application.setStatus("APPROVED");
+
+        // 承認者からのコメントを休暇申請に設定する
+        application.setApproverComment(comment);
+
+        // 承認日時を現在の日時に設定する
+        application.setApprovedAt(LocalDateTime.now());
+
+        // 承認者のユーザー情報を休暇申請に設定する
+        application.setApprover(approver);
+
+        // 更新された休暇申請情報をデータベースに保存する
+        leaveApplicationRepository.save(application);
+    }
+
+    // 従業員の休暇申請を拒否するメソッド
+    public void rejectLeave(Long id, String approverEmployeeNumber, String comment) {
+        // 休暇申請IDから休暇申請オブジェクトを取得する。存在しない場合は例外をスローする。
+        LeaveApplication application = leaveApplicationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("申請が見つかりません"));
+
+        // 承認者の社員番号からユーザーオブジェクトを取得する。存在しない場合は例外をスローする。
+        User approver = userRepository.findByEmployeeNumber(approverEmployeeNumber)
+                .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
+
+        // 休暇申請の状態を"REJECTED"（拒否）に更新する
+        application.setStatus("REJECTED");
+
+        // 承認者からのコメントを休暇申請に設定する
+        application.setApproverComment(comment);
+
+        // 拒否日時または決定日時として現在の日時を設定する
+        application.setApprovedAt(LocalDateTime.now());
+
+        // 承認者のユーザー情報を休暇申請に設定する
+        application.setApprover(approver);
+
+        // 更新された休暇申請情報をデータベースに保存する
+        leaveApplicationRepository.save(application);
+    }
 }
