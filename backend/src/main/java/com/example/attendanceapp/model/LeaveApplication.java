@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 休暇申請を表すエンティティクラス。
@@ -63,6 +64,14 @@ public class LeaveApplication {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    // 申請された休暇の開始時刻を格納します。
+    // 日付が既に startDate で管理されているため、こちらは具体的な時刻を扱います。
+    private LocalTime startTime;
+
+    // 申請された休暇の終了時刻を格納します。
+    // 日付が既に endDate で管理されているため、こちらは具体的な時刻を扱います。
+    private LocalTime endTime;
+
     /**
      * 休暇取得の時間帯区分
      * 午前のみ、午後のみ、または終日の指定が可能
@@ -102,6 +111,13 @@ public class LeaveApplication {
      */
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
+
+    /**
+     * 休暇の持続時間を分単位で表すフィールド。
+     * このフィールドは、申請された休暇の全体的な時間長を分単位で記録するために使用されます。
+     * 例えば、1時間30分の休暇の場合、durationMinutes は 90 が設定されることになります。
+     */
+    private Integer durationMinutes;
 
     /**
      * 承認者からのコメント
