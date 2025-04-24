@@ -30,7 +30,7 @@ export const AttendanceTable = () => {
       // API のレスポンスデータを items ステートにセット
       setItems(res.data);
     })
-  }, [])
+  }, [ items ])
 
   // コンポーネントのレンダリング部分
   return (

@@ -76,6 +76,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ログインAPIは認証不要
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/manager/**").hasRole("課長")
                         // その他のリクエストは
                         .anyRequest().authenticated()
                 )

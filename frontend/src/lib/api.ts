@@ -1,5 +1,6 @@
 // axiosモジュールをインポート。axiosはHTTPリクエストを簡単に送信できるライブラリです。
 import axios from 'axios';
+import { LeaveApplicationResponse } from "@/types/leave.ts";
 
 // axiosのインスタンスを作成します。
 // このインスタンスは、HTTPリクエストの送信先のベースURLを指定しています。
@@ -26,3 +27,11 @@ api.interceptors.request.use((config) => {
 
 // 作成したaxiosインスタンスを他のモジュールから利用できるようにエクスポートします。
 export default api;
+
+// 休暇申請のデータをサーバーから取得するための関数です。
+// この関数は api インスタンスの get メソッドを呼び出しており、指定されたエンドポイント "api/leaves" へ HTTP GET リクエストを送信します。
+// レスポンスの型は LeaveApplicationResponse として型定義されており、
+// 休暇申請に関する各フィールド (ID、開始日、終了日、部分休暇の種類、開始時刻、終了時刻、申請種類、理由、状況、及び承認者からのコメント) の情報が含まれています。
+export const fetchLeaveApplications = () : Promise<{ data : LeaveApplicationResponse[] }> => {
+  return api.get("/api/leaves");
+};

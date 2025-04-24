@@ -13,6 +13,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute.tsx";
 
 // ダッシュボードページのコンポーネントをインポート
 import DashboardPage from "@/pages/DashboardPage.tsx";
+import LeavePage from "@/pages/LeavePage.tsx";
+import LeaveApprovalPage from "@/pages/LeaveApprovalPage.tsx";
 
 // App関数コンポーネントは、アプリケーション全体のルーティング設定を管理しています。
 function App() {
@@ -35,9 +37,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/leave" element={
+          <ProtectedRoute>
+            <LeavePage/>
+          </ProtectedRoute>
+        }/>
 
         {/* 定義されていないその他のパスにアクセスされた場合、"/login"にリダイレクトします。 */ }
         <Route path="*" element={ <Navigate to="/login"/> }/>
+
+        <Route path="/admin/leaves" element={
+          <ProtectedRoute>
+            <LeaveApprovalPage/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/approvals" element={ <ProtectedRoute><LeaveApprovalPage/></ProtectedRoute> }/>
+
       </Routes>
     </BrowserRouter>
   );
