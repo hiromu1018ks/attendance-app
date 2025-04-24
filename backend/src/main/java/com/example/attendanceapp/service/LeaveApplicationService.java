@@ -3,6 +3,7 @@ package com.example.attendanceapp.service;
 import com.example.attendanceapp.dto.LeaveApplicationRequest;
 import com.example.attendanceapp.dto.LeaveApplicationResponse;
 import com.example.attendanceapp.dto.LeaveBalanceResponse;
+import com.example.attendanceapp.mapper.LeaveApplicationMapper;
 import com.example.attendanceapp.model.LeaveApplication;
 import com.example.attendanceapp.model.User;
 import com.example.attendanceapp.repository.LeaveApplicationRepository;
@@ -30,6 +31,8 @@ public class LeaveApplicationService {
 
     // ユーザー情報の取得を行うリポジトリ
     private final UserRepository userRepository;
+
+    private final LeaveApplicationMapper mapper;
 
     /**
      * ユーザーが休暇を申請する際の処理を実装するメソッドです。
@@ -104,8 +107,8 @@ public class LeaveApplicationService {
         entity.setType(request.getType());
         // 休暇申請の理由
         entity.setReason(request.getReason());
-        // 初期状態として、申請ステータスを"PENDING"に設定
-        entity.setStatus("PENDING");
+        // 初期状態として、申請ステータスを"申請中"に設定
+        entity.setStatus("申請中");
         // 計算された休暇の期間（分単位）
         entity.setDurationMinutes(durationMinutes);
         // 申請日時として、現在時刻を設定
@@ -167,13 +170,13 @@ public class LeaveApplicationService {
         // 休暇申請IDから休暇申請オブジェクトを取得する。存在しない場合は例外をスローする。
         LeaveApplication application = leaveApplicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("申請が見つかりません"));
-       
+
         // 承認者の社員番号からユーザーオブジェクトを取得する。存在しない場合は例外をスローする。
         User approver = userRepository.findByEmployeeNumber(approverEmployeeNumber)
                 .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
 
-        // 休暇申請の状態を"APPROVED"（承認済み）に更新する
-        application.setStatus("APPROVED");
+        // 休暇申請の状態を"承認済"（承認済み）に更新する
+        application.setStatus("承認済");
 
         // 承認者からのコメントを休暇申請に設定する
         application.setApproverComment(comment);
@@ -198,8 +201,8 @@ public class LeaveApplicationService {
         User approver = userRepository.findByEmployeeNumber(approverEmployeeNumber)
                 .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
 
-        // 休暇申請の状態を"REJECTED"（拒否）に更新する
-        application.setStatus("REJECTED");
+        // 休暇申請の状態を"却下"（拒否）に更新する
+        application.setStatus("却下");
 
         // 承認者からのコメントを休暇申請に設定する
         application.setApproverComment(comment);
@@ -212,5 +215,13 @@ public class LeaveApplicationService {
 
         // 更新された休暇申請情報をデータベースに保存する
         leaveApplicationRepository.save(application);
+    }
+
+    public List<LeaveApplicationResponse> getPendingApprovals(String managerNumber) {
+        return leaveApplicationRepository
+                .findPendingByManager(managerNumber)
+                .stream()
+                .map(mapper::toDto)
+                .toList();
     }
 }

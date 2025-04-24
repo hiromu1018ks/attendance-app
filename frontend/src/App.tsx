@@ -16,19 +16,21 @@ import DashboardPage from "@/pages/DashboardPage.tsx";
 import LeavePage from "@/pages/LeavePage.tsx";
 import LeaveApprovalPage from "@/pages/LeaveApprovalPage.tsx";
 
-// App関数コンポーネントは、アプリケーション全体のルーティング設定を管理しています。
+// Appコンポーネントは、アプリケーションのエントリーポイントとなる関数コンポーネントです。
+// このコンポーネントは、全体のルーティング構成および各ページのレンダリング処理を担当します。
 function App() {
   return (
-    // BrowserRouterコンポーネントでラップすることで、ルーティングできる環境を提供
+    // <BrowserRouter>は、HTML5のhistory APIを利用してクライアントサイドのルーティングを可能にするコンポーネントです。
+    // これにより、アプリケーション内で異なるパスに対して異なるコンポーネントを表示できます。
     <BrowserRouter>
-      {/* Routesコンポーネントは、個々のRoute定義を内包します。 */ }
+      {/* <Routes>コンポーネントは、複数の<Route>コンポーネントを内包し、各パスに対応するレンダリング処理を管理します。 */ }
       <Routes>
         {/* "/login"パスにアクセスした場合、LoginPageコンポーネントがレンダリングされます。 */ }
         <Route path="/login" element={ <LoginPage/> }/>
 
         {/* "/dashboard"パスは、ProtectedRouteコンポーネントでラップされています。
-            ProtectedRouteは、ユーザーが認証されているかを確認し、認証済みならDashboardPageを表示、
-            未認証の場合はログインページ等にリダイレクトする処理を行います。 */ }
+            ProtectedRouteは、ユーザーの認証状態を確認し、認証されている場合はDashboardPageコンポーネントを表示し、
+            認証されていない場合はログインページやエラーページにリダイレクトするロジックを内包しています。 */ }
         <Route
           path="/dashboard"
           element={
@@ -37,22 +39,36 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/leave" element={
-          <ProtectedRoute>
-            <LeavePage/>
-          </ProtectedRoute>
-        }/>
 
-        {/* 定義されていないその他のパスにアクセスされた場合、"/login"にリダイレクトします。 */ }
-        <Route path="*" element={ <Navigate to="/login"/> }/>
+        {/* "/leave"パスもProtectedRouteでラップされ、ユーザーの認証状態に基づいてLeavePageコンポーネントをレンダリングします。 */ }
+        <Route path="/leave"
+               element={
+                 <ProtectedRoute>
+                   <LeavePage/>
+                 </ProtectedRoute>
+               }
+        />
 
-        <Route path="/admin/leaves" element={
+        {/* "/admin/leaves"パスは、ProtectedRouteコンポーネントでラップされており、
+            認証が確認された場合にLeaveApprovalPageコンポーネントをレンダリングします。 */ }
+        <Route path="/manager/leaves"
+               element={
+                 <ProtectedRoute>
+                   <LeaveApprovalPage/>
+                 </ProtectedRoute>
+               }
+        />
+
+        {/* "/approvals"パスもProtectedRouteでラップされ、ユーザーが認証されている場合にLeaveApprovalPageコンポーネントを表示します。 */ }
+        <Route path="/approvals" element={
           <ProtectedRoute>
             <LeaveApprovalPage/>
           </ProtectedRoute>
         }/>
-        <Route path="/approvals" element={ <ProtectedRoute><LeaveApprovalPage/></ProtectedRoute> }/>
 
+        {/* 定義されていない任意のパスにアクセスされた場合、 Navigateコンポーネントにより"/login"パスにリダイレクトされます。
+            これにより、存在しないページへのアクセス時にユーザーがログインページに誘導されるようになっています。 */ }
+        <Route path="*" element={ <Navigate to="/login"/> }/>
       </Routes>
     </BrowserRouter>
   );

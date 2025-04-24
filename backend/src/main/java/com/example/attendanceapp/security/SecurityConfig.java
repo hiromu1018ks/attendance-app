@@ -76,6 +76,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ログインAPIは認証不要
                         .requestMatchers("/api/auth/login").permitAll()
+                        // マネージャー向けAPIエンドポイントへのアクセス制御
+                        // - "/api/manager/"で始まるすべてのAPIパスに対して適用
+                        // - 「課長」ロールを持つユーザーのみがアクセス可能
+                        // - ロールは認証時にUserDetailsに設定される権限から取得
+                        // - 該当ロールがないユーザーがアクセスすると403 Forbiddenエラーが返される
                         .requestMatchers("/api/manager/**").hasRole("課長")
                         // その他のリクエストは
                         .anyRequest().authenticated()

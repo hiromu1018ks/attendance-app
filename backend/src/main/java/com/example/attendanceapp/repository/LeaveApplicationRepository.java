@@ -51,4 +51,11 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
      * このリストは、作成日時(createdAt)に基づいて降順（最新順）に整列されています。
      */
     List<LeaveApplication> findByUserOrderByCreatedAtDesc(User user);
+
+    @Query("""
+                SELECT l
+                FROM LeaveApplication l
+                WHERE l.status = '申請中'
+            """)
+    List<LeaveApplication> findPendingByManager(@Param("managerNumber") String managerNumber);
 }
