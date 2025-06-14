@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"  // JavaScript用のPrismaクライアントを生成します
+}
+
+// データベース接続の設定
+// このセクションでは、使用するデータベースの種類と接続情報を指定します
+datasource db {
+  provider = "postgresql"  // PostgreSQLデータベースを使用することを指定
+  url      = env("DATABASE_URL")  // 環境変数からデータベースの接続URLを取得
+}
+
+// 部署マスタ
+// 組織の部署情報を管理するテーブル
+model Department {
+    id String @id @default(cuid())  // 部署の一意のID（自動生成）
+    code String @unique  // 部署コード（重複不可）
+    name String  // 部署名
+    parentId String? @map("parent_id")  // 親部署のID（階層構造用）
+    isActive Boolean @default(true) @map("is_active")  // 部署の有効/無効フラグ
+    createdAt DateTime @default(now()) @map("created_at")  // レコード作成日時
+    updatedAt DateTime @updatedAt @map("updated_at")  // レコード更新日時
+
+    // リレーション（テーブル間の関連付け）
+    parent Department? @relation("DepartmentHierarchy",fields: [parentId], references: [id])  // 親部署との関連
+    children Department[] @relation("DepartmentHierarchy")  // 子部署との関連
+    users User[]  // この部署に所属するユーザーとの関連
+
+    @@map("departments")  // テーブル名を"departments"としてマッピング
+}
+
+// 役職マスタ
+// 組織内の役職情報を管理するテーブル
+model Position {
+    id String @id @default(cuid())  // 役職の一意のID（自動生成）
+    code String @unique  // 役職コード（重複不可）
+    name String  // 役職名
+    level Int  // 役職の階層レベル
+    isActive Boolean @default(true) @map("is_active")  // 役職の有効/無効フラグ
+    createdAt DateTime @default(now()) @map("created_at")  // レコード作成日時
+    updatedAt DateTime @updatedAt @map("updated_at")  // レコード更新日時
+
+    users User[]  // この役職を持つユーザーとの関連
+
+    @@map("positions")  // テーブル名を"positions"としてマッピング
+}
+
+// ロールマスタ
+// システム内の権限ロールを管理するテーブル
+model Role {
+  id          String   @id @default(cuid())  // ロールの一意のID（自動生成）
+  name        String   @unique  // ロール名（重複不可）
+  description String?  // ロールの説明（任意）
+  permissions Json  // 権限情報をJSON形式で保存
+  isActive    Boolean  @default(true) @map("is_active")  // ロールの有効/無効フラグ
+  createdAt   DateTime @default(now()) @map("created_at")  // レコード作成日時
+  updatedAt   DateTime @updatedAt @map("updated_at")  // レコード更新日時
+
+  userRoles UserRole[]  // このロールを持つユーザーとの関連
+
+  @@map("roles")  // テーブル名を"roles"としてマッピング
+}
+
+// 職員マスタ
+// システムを利用する職員の情報を管理するテーブル
+model User {
+  id                  String   @id @default(cuid())  // ユーザーの一意のID（自動生成）
+  employeeNumber      String   @unique @map("employee_number")  // 社員番号（重複不可）
+  email               String   @unique  // メールアドレス（重複不可）
+  hashedPassword      String   @map("hashed_password")  // ハッシュ化されたパスワード
+  name                String  // 氏名
+  nameKana            String   @map("name_kana")  // 氏名（カナ）
+  departmentId        String   @map("department_id")  // 所属部署ID
+  positionId          String?  @map("position_id")  // 役職ID（任意）
+  hireDate            DateTime @map("hire_date")  // 入社日
+  isActive            Boolean  @default(true) @map("is_active")  // アカウントの有効/無効フラグ
+  isPasswordTemporary Boolean  @default(true) @map("is_password_temporary")  // 仮パスワードフラグ
+  lastLoginAt         DateTime? @map("last_login_at")  // 最終ログイン日時
+  createdAt           DateTime @default(now()) @map("created_at")  // レコード作成日時
+  updatedAt           DateTime @updatedAt @map("updated_at")  // レコード更新日時
+
+  // リレーション（テーブル間の関連付け）
+  department        Department         @relation(fields: [departmentId], references: [id])  // 所属部署との関連
+  position          Position?          @relation(fields: [positionId], references: [id])  // 役職との関連
+  userRoles         UserRole[]  // ユーザーのロール情報との関連
+  // attendanceRecords AttendanceRecord[]  // 勤怠記録との関連（現在はコメントアウト）
+
+  @@map("users")  // テーブル名を"users"としてマッピング
+  @@index([employeeNumber])  // 社員番号でインデックスを作成
+  @@index([departmentId])  // 部署IDでインデックスを作成
+}
+
+// ユーザーロール中間テーブル
+// ユーザーとロールの多対多の関連を管理するテーブル
+model UserRole {
+  id     String @id @default(cuid())  // レコードの一意のID（自動生成）
+  userId String @map("user_id")  // ユーザーID
+  roleId String @map("role_id")  // ロールID
+
+  // リレーション（テーブル間の関連付け）
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)  // ユーザーとの関連（ユーザー削除時に連動して削除）
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)  // ロールとの関連（ロール削除時に連動して削除）
+
+  @@unique([userId, roleId])  // ユーザーIDとロールIDの組み合わせは一意
+  @@map("user_roles")  // テーブル名を"user_roles"としてマッピング
+}
