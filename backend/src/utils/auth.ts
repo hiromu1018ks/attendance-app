@@ -177,6 +177,31 @@ export const recordLoginSuccess = async (
 };
 
 /**
+ * ログイン失敗を記録する関数
+ * セキュリティ監査のために、ログイン失敗の情報をログに記録します。
+ *
+ * @param employeeNumber - ログインを試みた社員番号
+ * @param ipAddress - ログイン試行元のIPアドレス
+ * @param userAgent - ブラウザ情報（オプション）
+ *
+ * この関数は以下の処理を行います：
+ * 1. ログイン失敗時の情報（社員番号、IPアドレス、ブラウザ情報、タイムスタンプ）をログに記録
+ * 2. セキュリティ監査や不正アクセス検知のために使用
+ */
+export const recordLoginFailure = async (
+  employeeNumber: string,
+  ipAddress: string,
+  userAgent?: string
+) => {
+  logger.warn("LOGIN_FAILURE", {
+    employeeNumber,
+    ipAddress,
+    userAgent,
+    timestamp: new Date().toISOString(),
+  });
+};
+
+/**
  * ログイン試行回数をチェックする関数
  * @param employeeNumber - 社員番号
  * @returns アカウントがロックされているかどうかと、ロック解除時刻
@@ -189,6 +214,6 @@ export const checkLoginAttempts = async (employeeNumber: string) => {
   // 簡易実装：実際にはRedisやデータベースで管理
   return {
     isLocked: false,
-    lockExpiresAt: null,
+    lockExpiresAt: new Date(Date.now() + 1000 * 60 * 5),
   };
 };

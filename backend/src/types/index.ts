@@ -59,7 +59,7 @@ export interface UserProfile {
   department: {
     id: string;
     name: string;
-    level: number;
+    code: string;
   };
   position?: {
     id: string;
