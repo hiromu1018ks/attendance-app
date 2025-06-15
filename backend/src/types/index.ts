@@ -82,7 +82,7 @@ export interface JwtPayload {
   userId: string;
   employeeNumber: string;
   email: string;
-  roles: [];
+  roles: string[];
   iat?: number;
   exp?: number;
 }
